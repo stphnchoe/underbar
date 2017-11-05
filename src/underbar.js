@@ -83,12 +83,11 @@
   };
 
   // Return all elements of an array that pass a truth test.
-  _.filter = function(collection, test, pass) {
+  _.filter = function(collection, test) {
     var filterArray = [];
-    var check = pass === undefined ? true : pass;
 
     _.each(collection, function(item) {
-      if (test(item) === check) {
+      if (test(item)) {
         filterArray.push(item);
       }
     });
@@ -98,7 +97,9 @@
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, test) {
     
-    return _.filter(collection, test, false);
+    return _.filter(collection, function(item) {
+      return !test(item);
+    });
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
   };
@@ -195,8 +196,8 @@
       accumulator = iterator(accumulator, collection[i]);
       }
     } else {
-      for (var i = 0; i < collection.length; i++) {
-      accumulator = iterator(accumulator, collection[i]);
+      for (var key in collection) {
+      accumulator = iterator(accumulator, collection[key]);
       }
     }
     return accumulator;
@@ -218,11 +219,34 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    if (iterator === undefined) {
+      return _.reduce(collection, function(memo, item) {
+        if (!item) {
+          memo = false;
+        }
+        return memo;
+      }, true);
+    }
+    return _.reduce(collection, function(memo, item) {
+      if (!iterator(item)) {
+        memo = false;
+      }
+      return memo;
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
+    if (iterator === undefined) {
+      return _.some(collection, function(item) { return item === true; })
+    }
+    if (_.every(collection, function(item) {
+      return !iterator(item);
+    })) {
+    return false;
+    }
+    return true;
     // TIP: There's a very clever way to re-use every() here.
   };
 
@@ -246,11 +270,25 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+      obj[key] = arguments[i][key];
+      }
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    for (var i = 1; i < arguments.length; i++) {
+      for (var key in arguments[i]) {
+        if (!_.contains(Object.keys(obj), key)) {
+        obj[key] = arguments[i][key];
+        }
+      }
+    }
+    return obj;
   };
 
 
@@ -294,6 +332,14 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var cache = [];
+    return function() {
+      var key = JSON.stringify(arguments);
+      if (!_.contains(Object.keys(cache), key)) {
+        cache[key] = func.apply(this, arguments);
+      }
+      return cache[key];
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -303,6 +349,10 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = [].slice.call(arguments);
+    args = args.slice(2);
+    return setTimeout(function() {
+        func.apply(this, args)}, wait);
   };
 
 
@@ -317,6 +367,16 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var shuffleArray = [].slice.call(arguments[0]);
+ 
+    for (var i = (array.length - 1); i > 0; i--) {
+      var randomNumber = Math.floor(Math.random() * (i));
+      var swap = shuffleArray[i];
+      shuffleArray[i] = shuffleArray[randomNumber];
+      shuffleArray[randomNumber] = swap;
+    }
+    return shuffleArray;
+
   };
 
 

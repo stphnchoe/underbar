@@ -110,7 +110,7 @@
       it('should work when no callback is provided', function() {
         expect(_.every([true, true, true])).to.be.true;
         expect(_.every([true, true, false])).to.be.false;
-        expect(_.every([false, false, false])).to.be.false;
+        expect(_.every([false, false, true])).to.be.false;
       });
     });
 
